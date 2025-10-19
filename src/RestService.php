@@ -54,18 +54,6 @@ class RestService
      */
     private array $map {
         get {
-            if (empty($this->map)) {
-                $cacheFile = $this->cachePath . DIRECTORY_SEPARATOR . "api-map.cache";
-                if (file_exists(filename: $cacheFile)) {
-                    $this->map = json_decode(
-                        json: file_get_contents(filename: $cacheFile),
-                        associative: true,
-                        flags: JSON_THROW_ON_ERROR
-                    );
-                } else {
-                    $this->map = $this->generateMap();
-                }
-            }
             return $this->map;
         }
         set {
@@ -155,6 +143,24 @@ class RestService
         if (!is_dir(filename: $filePath)) {
             throw new RuntimeException(message: sprintf('Directory "%s" does not exist', $filePath));
         }
+        try {
+            $cacheFile = $this->cachePath . DIRECTORY_SEPARATOR . "api-map.cache";
+            if (file_exists(filename: $cacheFile)) {
+                $this->map = json_decode(
+                    json: file_get_contents(filename: $cacheFile),
+                    associative: true,
+                    flags: JSON_THROW_ON_ERROR
+                );
+            } else {
+                $this->map = $this->generateMap();
+            }
+        } catch (Throwable) {
+            $this->handleException(new RuntimeException(
+                message: HttpCodes::toString(code: HttpCodes::InternalServerError->value),
+                code: HttpCodes::InternalServerError->value
+            ));
+        }
+
     }
 
     /**
