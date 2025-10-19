@@ -9,6 +9,7 @@ use Lohres\RestService\Attributes\ExcludeFromMap;
 use Lohres\RestService\Attributes\Method;
 use Lohres\RestService\Attributes\Url;
 use Lohres\RestService\Enums\HttpCodes;
+use Lohres\RestService\Enums\RequestMethods;
 use Monolog\Logger;
 use RecursiveDirectoryIterator;
 use RecursiveIteratorIterator;
@@ -157,6 +158,47 @@ class RestService
     }
 
     /**
+     * @return void
+     */
+    public function init():void
+    {
+        try {
+            if (PHP_SAPI !== "cli") {
+                $this->parseInput();
+                $this->cors();
+                if ($_SERVER["REQUEST_METHOD"] === RequestMethods::OPTIONS->value) {
+                    exit(0);
+                }
+                $this->checkAuthNeeded();
+                $this->callEndpoint();
+            } else {
+                $this->handleException(exception: new RuntimeException(
+                    message: HttpCodes::toString(HttpCodes::Forbidden->value),
+                    code: HttpCodes::Forbidden->value
+                ));
+            }
+        } catch (Throwable $exception) {
+            die("ERROR: " . $exception->getMessage());
+        }
+    }
+
+    /**
+     * @return void
+     * @throws JsonException
+     */
+    private function parseInput(): void
+    {
+        $_POST = match ($_SERVER["CONTENT_TYPE"]) {
+            "application/json;charset=utf-8", "application/json" => json_decode(
+                json: file_get_contents("php://input"),
+                associative: true,
+                flags: JSON_THROW_ON_ERROR
+            ),
+            default => $_POST
+        };
+    }
+
+    /**
      * @param Response $response
      * @return void
      * @throws JsonException
@@ -266,7 +308,7 @@ class RestService
     /**
      * @return void
      */
-    public function checkAuthNeeded(): void
+    private function checkAuthNeeded(): void
     {
         try {
             $targetArr = $this->parseUrl(method: $_SERVER["REQUEST_METHOD"], url: $_SERVER["REQUEST_URI"]);
@@ -292,7 +334,7 @@ class RestService
     /**
      * @return void
      */
-    public function callEndpoint(): void
+    private function callEndpoint(): void
     {
         try {
             $targetArr = $this->parseUrl(method: $_SERVER["REQUEST_METHOD"], url: $_SERVER["REQUEST_URI"]);
@@ -356,5 +398,22 @@ class RestService
             );
         }
         return $mapList;
+    }
+
+    /**
+     * @return void
+     */
+    private function cors(): void
+    {
+        if (in_array(needle: $_SERVER["HTTP_ORIGIN"], haystack: LOHRES_ALLOWED_ORIGINS, strict: true)) {
+            header(header: "Access-Control-Allow-Origin: " . $_SERVER["HTTP_ORIGIN"]);
+        }
+        if (LOHRES_ALLOWED_ORIGINS[0] === "*") {
+            header(header: "Access-Control-Allow-Origin: *");
+        }
+        header(header: "Access-Control-Allow-Credentials: true");
+        header(header: "Access-Control-Max-Age: 86400");    // cache for 1 day
+        header(header: "Access-Control-Allow-Methods: POST, OPTIONS");
+        header(header: "Access-Control-Allow-Headers: *, Authorization");
     }
 }
