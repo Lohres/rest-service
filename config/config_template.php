@@ -1,0 +1,17 @@
+<?php declare(strict_types=1);
+
+define("LOHRES_ROOT", dirname(__DIR__));
+
+const LOHRES_LOG_PATH = LOHRES_ROOT . DIRECTORY_SEPARATOR . "logs";
+const LOHRES_LOG_BACKUP_PATH = LOHRES_ROOT . DIRECTORY_SEPARATOR . "logsBackup";
+
+const LOHRES_CACHE_PATH = LOHRES_ROOT . DIRECTORY_SEPARATOR . "cache";
+
+const LOHRES_KEYS_PATH = LOHRES_ROOT . DIRECTORY_SEPARATOR . "apps";
+
+const LOHRES_LOG_LEVEL = 100;
+
+const LOHRES_APP_NAME = "";
+
+const LOHRES_ALLOWED_ORIGINS = [];
+
