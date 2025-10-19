@@ -74,7 +74,6 @@ enum HttpCodes: int {
     /**
      * @param int $code
      * @return string
-     * @throws Exception
      */
     public static function toString(int $code): string
     {
@@ -141,7 +140,7 @@ enum HttpCodes: int {
             self::LoopDetected->value => "Loop Detected",
             self::NotExtended->value => "Not Extended",
             self::NetworkAuthenticationRequired->value => "Network Authentication Required",
-            default => throw new Exception("Unexpected enum value")
+            default => "unknown"
         };
     }
 }
