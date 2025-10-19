@@ -5,8 +5,7 @@
   "license": "MIT",
   "autoload": {
     "psr-4": {
-      "Lohres\\RestService\\": "src/",
-      "Endpoints\\": "Endpoints"
+      "Lohres\\RestService\\": "src/"
     }
   },
   "authors": [
