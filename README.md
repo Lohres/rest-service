@@ -7,17 +7,25 @@ REST Service for lohres projects
 > require_once "config/config.php";
 > require_once "vendor/autoload.php";
 > 
-> $logger = LogHelper::getLogger(name: "rest-service", level: LOHRES_LOG_LEVEL);
-> $authService = new AuthService();
+> $config = [
+>     RestService::CACHE_PATH => "PATH/TO/YOUR/CACHE/DIRECTORY",
+>     RestService::FILE_PATH => "PATH/TO/YOUR/ENDPOINTS/DIRECTORY",
+>     RestService::NAMESPACE => "\\YOUR\\ENDPOINTS\\NAMESPACE\\",
+>     RestService::REPLACE => "your-replace-string" // /your-replace-string/myEndpoint/function  -> myEndpoint/function
+> ];
 > 
-> $restService = new RestService(
->    cachePath: LOHRES_CACHE_PATH,
->    filePath: LOHRES_ENDPOINT_PATH,
->    namespace: LOHRES_ENDPOINT_NAMESPACE,
->    replace: LOHRES_ENDPOINT_REPLACE,
->    logger: $logger,
->    authService: $authService
-> );
-> $restService->init();
+> $logger = null // monolog Logger;
+> $authService = null // new AuthService() -> implement checkToken() method;
+>
+> try {
+>     $restService = new RestService(
+>         config: $config,
+>         logger: $logger,
+>         authService: $authService
+>     );
+>     $restService->init();
+> } catch (Throwable $exception) {
+>     die("ERROR: " . $exception->getMessage());
+> }
 > ``` 
 >

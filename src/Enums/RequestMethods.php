@@ -2,8 +2,6 @@
 
 namespace Lohres\RestService\Enums;
 
-use Exception;
-
 enum RequestMethods: string {
     case GET = "GET";
     case HEAD = "HEAD";

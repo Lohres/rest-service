@@ -25,33 +25,18 @@ use Throwable;
  */
 class RestService
 {
-    /**
-     * @var string
-     */
-    private string $cachePath {
+    public const string CACHE_PATH = "cachePath";
+    public const string FILE_PATH = "filePath";
+    public const string NAMESPACE = "namespace";
+    public const string REPLACE = "replace";
+    private array $config {
         get {
-            return $this->cachePath;
+            return $this->config;
         }
         set {
-            $this->cachePath = $value;
+            $this->config = $value;
         }
     }
-
-    /**
-     * @var string
-     */
-    private string $filePath {
-        get {
-            return $this->filePath;
-        }
-        set {
-            $this->filePath = $value;
-        }
-    }
-
-    /**
-     * @var array
-     */
     private array $map {
         get {
             return $this->map;
@@ -60,35 +45,7 @@ class RestService
             $this->map = $value;
         }
     }
-
-    /**
-     * @var string
-     */
-    private string $namespace {
-        get {
-            return $this->namespace;
-        }
-        set {
-            $this->namespace = $value;
-        }
-    }
-
-    /**
-     * @var string
-     */
-    private string $replace {
-        get {
-            return $this->replace;
-        }
-        set {
-            $this->replace = $value;
-        }
-    }
-
-    /**
-     * @var Logger
-     */
-    private Logger $logger {
+    private ?Logger $logger {
         get {
             return $this->logger;
         }
@@ -97,10 +54,7 @@ class RestService
         }
     }
 
-    /**
-     * @var AuthService
-     */
-    private AuthService $authService {
+    private ?AuthService $authService {
         get {
             return $this->authService;
         }
@@ -110,41 +64,34 @@ class RestService
     }
 
     /**
-     * @param string $cachePath
-     * @param string $filePath
-     * @param string $namespace
-     * @param string $replace
-     * @param Logger $logger
-     * @param AuthService $authService
+     * @param array $config
+     * @param Logger|null $logger
+     * @param AuthService|null $authService
      */
     public function __construct(
-        string $cachePath,
-        string $filePath,
-        string $namespace,
-        string $replace,
-        Logger $logger,
-        AuthService $authService
+        array $config,
+        ?Logger $logger = null,
+        ?AuthService $authService = null
     ) {
-        if (empty($cachePath) || empty($filePath) || empty($namespace)) {
-            $this->handleException(exception: new RuntimeException(
-                message: "config for rest-service invalid!",
-                code: HttpCodes::InternalServerError->value
-            ));
-        }
-        $this->cachePath = $cachePath;
-        $this->filePath = $filePath;
-        $this->namespace = $namespace;
-        $this->replace = $replace;
+        $this->config = $config;
         $this->logger = $logger;
         $this->authService = $authService;
-        if (!@mkdir(directory: $cachePath, recursive: true) && !is_dir(filename: $cachePath)) {
-            throw new RuntimeException(message: sprintf('Directory "%s" was not created', $cachePath));
+        $this->checkConfig();
+        if (
+            !@mkdir(directory: $this->config[self::CACHE_PATH], recursive: true) &&
+            !is_dir(filename: $this->config[self::CACHE_PATH])
+        ) {
+            throw new RuntimeException(message: sprintf(
+                'Directory "%s" was not created', $this->config[self::CACHE_PATH]
+            ));
         }
-        if (!is_dir(filename: $filePath)) {
-            throw new RuntimeException(message: sprintf('Directory "%s" does not exist', $filePath));
+        if (!is_dir(filename: $this->config[self::FILE_PATH])) {
+            throw new RuntimeException(message: sprintf(
+                'Directory "%s" does not exist', $this->config[self::FILE_PATH]
+            ));
         }
         try {
-            $cacheFile = $this->cachePath . DIRECTORY_SEPARATOR . "api-map.cache";
+            $cacheFile =  $this->config[self::CACHE_PATH] . DIRECTORY_SEPARATOR . "rest-service-map.cache";
             if (file_exists(filename: $cacheFile)) {
                 $this->map = json_decode(
                     json: file_get_contents(filename: $cacheFile),
@@ -154,13 +101,14 @@ class RestService
             } else {
                 $this->map = $this->generateMap();
             }
-        } catch (Throwable) {
-            $this->handleException(new RuntimeException(
+            $this->logger?->debug(message: "RestService initialized");
+        } catch (Throwable $exception) {
+            $this->logger?->error(message: $exception->getMessage(), context: [$exception->getTrace()]);
+            $this->handleException(exception: new RuntimeException(
                 message: HttpCodes::toString(code: HttpCodes::InternalServerError->value),
                 code: HttpCodes::InternalServerError->value
             ));
         }
-
     }
 
     /**
@@ -169,6 +117,7 @@ class RestService
     public function init():void
     {
         try {
+            $this->logger?->debug(message: "call init");
             if (PHP_SAPI !== "cli") {
                 $this->parseInput();
                 $this->cors();
@@ -178,13 +127,36 @@ class RestService
                 $this->checkAuthNeeded();
                 $this->callEndpoint();
             } else {
-                $this->handleException(exception: new RuntimeException(
+                $exception = new RuntimeException(
                     message: HttpCodes::toString(HttpCodes::Forbidden->value),
                     code: HttpCodes::Forbidden->value
-                ));
+                );
+                $this->logger?->error(message: $exception->getMessage(), context: [$exception->getTrace()]);
+                $this->handleException(exception: $exception);
             }
         } catch (Throwable $exception) {
             die("ERROR: " . $exception->getMessage());
+        }
+    }
+
+    /**
+     * @return void
+     * @throws RuntimeException
+     */
+    private function checkConfig(): void
+    {
+        $this->logger?->debug(message: "check config");
+        if (
+            empty($this->config[self::CACHE_PATH]) ||
+            empty($this->config[self::FILE_PATH]) ||
+            empty($this->config[self::NAMESPACE])
+        ) {
+            $exception = new RuntimeException(
+                message: "config for rest-service invalid!",
+                code: HttpCodes::InternalServerError->value
+            );
+            $this->logger?->error(message: $exception->getMessage(), context: [$exception->getTrace()]);
+            $this->handleException(exception: $exception);
         }
     }
 
@@ -194,6 +166,7 @@ class RestService
      */
     private function parseInput(): void
     {
+        $this->logger?->debug(message: "parse input");
         $_POST = match ($_SERVER["CONTENT_TYPE"]) {
             "application/json;charset=utf-8", "application/json" => json_decode(
                 json: file_get_contents("php://input"),
@@ -222,7 +195,7 @@ class RestService
     private function handleException(Throwable $exception): void
     {
         try {
-            $this->logger->error(message: $exception->getMessage(), context: [$exception->getTrace()]);
+            $this->logger?->debug(message: "handle exception", context: [$exception->getTrace()]);
             header(header: "HTTP/1.0 {$exception->getCode()} {$exception->getMessage()}");
             $content = [
                 "message" => $exception->getMessage(),
@@ -243,6 +216,7 @@ class RestService
      */
     private function parseTarget(string $target): array|bool
     {
+        $this->logger?->debug(message: "parse target $target");
         if (!str_contains(haystack: $target, needle: "@")) {
             return false;
         }
@@ -256,18 +230,21 @@ class RestService
      */
     private function parseUrl(string $method, string $url): array
     {
+        $this->logger?->debug(message: "parse url $url");
         $path = preg_replace(pattern: '/\?.*$/', replacement: "", subject: $url);
-        if ($this->replace !== "") {
-            $path = str_replace(search: $this->replace, replace: "", subject: $path);
+        if (!empty($this->config[self::REPLACE])) {
+            $path = str_replace(search: $this->config[self::REPLACE], replace: "", subject: $path);
         }
         $path = trim(string: $path, characters: "/");
         $target = $this->map[$method][$path] ?? "";
         $targetArr = $this->parseTarget(target: $target);
         if (is_bool(value: $targetArr) || count(value: $targetArr) > 2) {
-            $this->handleException(exception: new RuntimeException(
+            $exception = new RuntimeException(
                 message: "invalid rest-service target!",
                 code: HttpCodes::NotFound->value
-            ));
+            );
+            $this->logger?->error(message: $exception->getMessage(), context: [$exception->getTrace()]);
+            $this->handleException(exception: $exception);
         }
         return $targetArr;
     }
@@ -278,6 +255,7 @@ class RestService
      */
     private function getToken(string $token): string
     {
+        $this->logger?->debug(message: "get token from $token");
         if (!str_contains(haystack: $token, needle: "Bearer")) {
             throw new RuntimeException(
                 message: HttpCodes::toString(HttpCodes::Forbidden->value),
@@ -292,6 +270,7 @@ class RestService
      */
     private function getAuthorizationHeader(): string
     {
+        $this->logger?->debug(message: "get authorization header");
         if (!is_null(value: $_SERVER["Authorization"])) {
             return trim(string: $_SERVER["Authorization"]);
         }
@@ -317,8 +296,9 @@ class RestService
     private function checkAuthNeeded(): void
     {
         try {
+            $this->logger?->debug(message: "check auth needed");
             $targetArr = $this->parseUrl(method: $_SERVER["REQUEST_METHOD"], url: $_SERVER["REQUEST_URI"]);
-            $class = $this->namespace . $targetArr[1];
+            $class = $this->config[self::NAMESPACE] . $targetArr[1];
             if (class_exists(class: $class)) {
                 $reflection = new ReflectionClass(objectOrClass: $class);
                 $method = $reflection->getMethod(name: $targetArr[0]);
@@ -327,12 +307,13 @@ class RestService
                     foreach ($attributes as $attribute) {
                         if ($attribute->getName() === Auth::class && $attribute->getArguments()[0]) {
                             $token = $this->getToken(token: $this->getAuthorizationHeader());
-                            $this->authService->checkToken(token: $token);
+                            $this->authService?->checkToken(token: $token);
                         }
                     }
                 }
             }
         } catch (Throwable $exception) {
+            $this->logger?->error(message: $exception->getMessage(), context: [$exception->getTrace()]);
             $this->handleException(exception: $exception);
         }
     }
@@ -343,13 +324,15 @@ class RestService
     private function callEndpoint(): void
     {
         try {
+            $this->logger?->debug(message: "call endpoint");
             $targetArr = $this->parseUrl(method: $_SERVER["REQUEST_METHOD"], url: $_SERVER["REQUEST_URI"]);
-            $class = $this->namespace . $targetArr[1];
+            $class = $this->config[self::NAMESPACE] . $targetArr[1];
             $method = $targetArr[0];
             $response = $class::$method();
             $this->prepareResponse(response: $response);
             exit(0);
         } catch (Throwable $exception) {
+            $this->logger?->error(message: $exception->getMessage(), context: [$exception->getTrace()]);
             $this->handleException(exception: $exception);
         }
     }
@@ -360,9 +343,10 @@ class RestService
      */
     private function generateMap(): array
     {
+        $this->logger?->debug(message: "generate map");
         $mapList = [];
         $rdi = new RecursiveDirectoryIterator(
-            directory: $this->filePath,
+            directory: $this->config[self::FILE_PATH],
             flags: FilesystemIterator::SKIP_DOTS | FilesystemIterator::UNIX_PATHS
         );
         $iterator = new RecursiveIteratorIterator(iterator: $rdi);
@@ -370,14 +354,16 @@ class RestService
             assert(assertion: $file instanceof SplFileInfo);
             if ($file->isFile() && $file->getExtension() === "php") {
                 $fileName = $file->getBasename(suffix: ".php");
-                $class = $this->namespace . $fileName;
+                $class = $this->config[self::NAMESPACE] . $fileName;
                 if (class_exists(class: $class)) {
                     $reflection = new ReflectionClass(objectOrClass: $class);
                     $methods = $reflection->getMethods(filter: ReflectionMethod::IS_PUBLIC);
                     foreach ($methods as $method) {
+                        $this->logger?->debug(message: "found method: " . $method->getName());
                         $attributes = $method->getAttributes();
                         $attributesNames = array_map(static fn($attribute) => $attribute->getName(), $attributes);
                         if (in_array(needle: ExcludeFromMap::class, haystack: $attributesNames, strict: true)) {
+                            $this->logger?->debug(message: "$method excluded from map");
                             continue;
                         }
                         $httpMethod = "";
@@ -399,9 +385,10 @@ class RestService
         }
         if (!empty($mapList)) {
             file_put_contents(
-                filename: $this->cachePath . DIRECTORY_SEPARATOR . "rest-service-map.cache",
+                filename: $this->config[self::CACHE_PATH] . DIRECTORY_SEPARATOR . "rest-service-map.cache",
                 data: json_encode(value: $mapList, flags: JSON_THROW_ON_ERROR)
             );
+            $this->logger?->debug(message: "map saved in cache");
         }
         return $mapList;
     }
@@ -411,6 +398,7 @@ class RestService
      */
     private function cors(): void
     {
+        $this->logger?->debug(message: "set cors");
         if (in_array(needle: $_SERVER["HTTP_ORIGIN"], haystack: LOHRES_ALLOWED_ORIGINS, strict: true)) {
             header(header: "Access-Control-Allow-Origin: " . $_SERVER["HTTP_ORIGIN"]);
         }

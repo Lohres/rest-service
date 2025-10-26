@@ -2,8 +2,6 @@
 
 namespace Lohres\RestService\Enums;
 
-use Exception;
-
 enum HttpCodes: int {
     case Continue = 100;
     case SwitchingProtocols = 101;
@@ -68,8 +66,6 @@ enum HttpCodes: int {
     case LoopDetected = 508;
     case NotExtended = 510;
     case NetworkAuthenticationRequired = 511;
-
-
 
     /**
      * @param int $code
