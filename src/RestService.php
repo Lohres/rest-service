@@ -167,7 +167,7 @@ class RestService
     private function parseInput(): void
     {
         $this->logger?->debug(message: "parse input");
-        $_POST = match ($_SERVER["CONTENT_TYPE"]) {
+        $_POST = match ($_SERVER["CONTENT_TYPE"] ?? "") {
             "application/json;charset=utf-8", "application/json" => json_decode(
                 json: file_get_contents("php://input"),
                 associative: true,
@@ -271,10 +271,10 @@ class RestService
     private function getAuthorizationHeader(): string
     {
         $this->logger?->debug(message: "get authorization header");
-        if (!is_null(value: $_SERVER["Authorization"])) {
+        if (!empty($_SERVER["Authorization"])) {
             return trim(string: $_SERVER["Authorization"]);
         }
-        if (!is_null(value: $_SERVER["HTTP_AUTHORIZATION"])) {
+        if (!empty($_SERVER["HTTP_AUTHORIZATION"])) {
             return trim(string: $_SERVER["HTTP_AUTHORIZATION"]);
         }
         if (function_exists(function: "apache_request_headers")) {
@@ -399,7 +399,7 @@ class RestService
     private function cors(): void
     {
         $this->logger?->debug(message: "set cors");
-        if (in_array(needle: $_SERVER["HTTP_ORIGIN"], haystack: LOHRES_ALLOWED_ORIGINS, strict: true)) {
+        if (in_array(needle: $_SERVER["HTTP_ORIGIN"] ?? "", haystack: LOHRES_ALLOWED_ORIGINS, strict: true)) {
             header(header: "Access-Control-Allow-Origin: " . $_SERVER["HTTP_ORIGIN"]);
         }
         if (LOHRES_ALLOWED_ORIGINS[0] === "*") {
