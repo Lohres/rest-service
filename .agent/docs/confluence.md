@@ -11,14 +11,8 @@ Diese Seite beschreibt ein standardisiertes Setup der Codex Client App mit diese
 
 ### Schnellstart (unter 5 Minuten)
 
-1. Codex Client App installieren (Website: [OpenAI Codex](https://openai.com/codex/))
-2. Projekt in Codex hinzufuegen/oeffnen (Repo: [dia-agent-setup](https://bitbucket.org/dia-software/dia-agent-setup))
-3. Agent-Framework im Projekt installieren:
-
 ```bash
 cd <pfad-zum-zielprojekt>
-mkdir -p .agent && git archive --remote=git@bitbucket.org:dia-software/dia-agent-setup.git HEAD .agent | tar -x -C .agent --strip-components=1
-chmod +x .agent/setup.sh
 .agent/setup.sh
 ```
 
@@ -34,18 +28,6 @@ Das Agent-Setup macht und gewaehrleistet:
 - stellt einen reproduzierbaren Erstlauf-Prozess mit Freigabepunkten sicher
 - trennt klar zwischen Regeln (`AGENTS.md`) und Ausfuehrung (Skills)
 - ermoeglicht damit modell- und agentunabhaengige Nutzung im Team
-
-## Electron Custom Client (für Fedora & Ubuntu)
-
-Fuer Entwickler die auf Linux nicht den Standard-Client nutzen können, kann ein Electron-basierter Codex Custom Client eingesetzt werden.
-Basis - Custom Install Script: [](https://github.com/ilysenko/codex-desktop-linux)
-
-Download-Links:
-- [Codex Client fuer Ubuntu](https://dia-share.s3.eu-central-1.amazonaws.com/Setup/Ubuntu/codex-app-ubuntu.zip)
-- [Codex Client fuer Fedora](https://dia-share.s3.eu-central-1.amazonaws.com/Setup/Fedora/codex-app-fedora.zip)
-
-Die Applikation einfach auf dem Zielsystem auspacken, dann die in dem Ordner liegende start.sh ausführen, dann startet Codex.
-Ggf. wenn möglich Verknüpfung oder Shortcut in der Shell anlegen.
 
 ## Kernprinzip: Regeln und Werkzeuge sind entkoppelt
 
@@ -95,26 +77,6 @@ Skills kapseln wiederkehrende Muster (z. B. Analyse, Setup, Generatoren) und wer
 
 Damit bleibt `AGENTS.md` schlank (Regeln), waehrend Skills operatives Know-how versionierbar liefern.
 
-## Fiktives Beispielprojekt: "DIA Commerce API"
-
-### Ausgangslage
-
-Ein Team betreibt eine Laravel-API mit Checkout, Payments und CRM-Sync. Ziel: Agent-unterstuetzte Aufgaben (Bugfixes, Doku, Refactorings) mit reproduzierbarem Sicherheitsrahmen.
-
-### Ablauf im Projekt
-
-1. Setup wird einmalig im Repo aktiviert (`.agent/setup.sh`).
-2. Der Agent befuellt beim Erstlauf die drei Projektdateien unter `.agent/project/` aus realem Kontext.
-3. Team prueft die Entwuerfe und gibt explizit frei.
-4. Optional werden projektrelevante Skills installiert (z. B. fuer Laravel, SQL, API-Dokumentation).
-5. Ab dann arbeitet der Agent strikt entlang der Regelhierarchie in `AGENTS.md`.
-
-### Nutzen
-
-- Gleiches Verhalten ueber verschiedene Modelle/Agenten hinweg
-- Weniger implizites Wissen im Kopf einzelner Entwickler
-- Kontrollierbarer Rollout neuer Skills statt ad-hoc Prompting
-
 ## Risiken bei AGENTS-Nutzung
 
 Wenn `AGENTS.md` zu breit, zu unscharf oder ohne Review gepflegt wird, entstehen reale Risiken (Sicherheitsluecken, ungewollte Aenderungen, Compliance-Verletzungen).
@@ -142,8 +104,6 @@ Wenn `AGENTS.md` zu breit, zu unscharf oder ohne Review gepflegt wird, entstehen
 
 ```bash
 cd <pfad-zum-zielprojekt>
-mkdir -p .agent && git archive --remote=git@bitbucket.org:dia-software/dia-agent-setup.git HEAD .agent | tar -x -C .agent --strip-components=1
-chmod +x .agent/setup.sh
 .agent/setup.sh
 ```
 

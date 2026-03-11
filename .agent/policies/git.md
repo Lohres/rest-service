@@ -14,7 +14,7 @@ Nur Ticket-ID groß schreiben, sonst nutze kleinschreibung und bindestriche.
 - Kein direkter Push auf `main`, `dev`, `master`, `development`
 - Kein force push.
 - Branch vor letztem Push mit Zielbranch synchronisieren (rebase).
-- Merge nur in BitBucket verboten.
+- Merge nur in GitHub verboten.
 
 ## Historie
 
