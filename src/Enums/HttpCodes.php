@@ -2,6 +2,9 @@
 
 namespace Lohres\RestService\Enums;
 
+/**
+ * Known HTTP status codes used by the service.
+ */
 enum HttpCodes: int {
     case Continue = 100;
     case SwitchingProtocols = 101;

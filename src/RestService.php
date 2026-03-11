@@ -71,7 +71,19 @@ class RestService
     }
 
     /**
-     * @param array $config
+     * @param array{
+     *   cachePath: string,
+     *   filePath: string,
+     *   namespace: string,
+     *   replace?: string,
+     *   cacheEnabled?: bool,
+     *   cacheForceRebuild?: bool,
+     *   corsAllowedOrigins?: string[],
+     *   corsAllowMethods?: string[],
+     *   corsAllowHeaders?: string[],
+     *   corsAllowCredentials?: bool,
+     *   corsMaxAge?: int
+     * } $config
      * @param Logger|null $logger
      * @param AuthService|null $authService
      */

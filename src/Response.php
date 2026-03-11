@@ -11,8 +11,14 @@ use JsonSerializable;
  */
 class Response implements JsonSerializable
 {
+    /**
+     * @var array{success: bool, debug?: string, content?: mixed}
+     */
     private array $return;
 
+    /**
+     * @return void
+     */
     public function __construct()
     {
         $this->setSuccess(value: false);
@@ -70,7 +76,7 @@ class Response implements JsonSerializable
     }
 
     /**
-     * @return array
+     * @return list<string>
      */
     public function getKeys(): array
     {
@@ -78,7 +84,7 @@ class Response implements JsonSerializable
     }
 
     /**
-     * @return array
+     * @return array{success: bool, debug?: string, content?: mixed}
      */
     public function jsonSerialize(): array
     {

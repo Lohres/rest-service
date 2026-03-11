@@ -8,8 +8,14 @@ use Lohres\RestService\Attributes\Url;
 use Lohres\RestService\Enums\RequestMethods;
 use Lohres\RestService\Response;
 
+/**
+ * Example endpoint for local smoke tests.
+ */
 final class Ping
 {
+    /**
+     * @return Response
+     */
     #[Method(RequestMethods::GET->value)]
     #[Url("hello")]
     #[Auth(false)]
