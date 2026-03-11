@@ -107,3 +107,12 @@ final class JwtAuthService extends AuthService
 ```
 
 `checkToken(string $token): void` muss bei ungueltigen Tokens eine Exception werfen.
+
+## Konfigurationsvalidierung
+
+`RestService` validiert Konfigurationswerte beim Start fruehzeitig:
+
+- Pflichtfelder als nicht-leere Strings: `cachePath`, `filePath`, `namespace`
+- Typpruefung optionaler Werte (z. B. `cacheEnabled` als `bool`, `corsMaxAge` als `int`)
+- `cachePath` muss lesbar und schreibbar sein
+- `filePath` muss existieren und lesbar sein

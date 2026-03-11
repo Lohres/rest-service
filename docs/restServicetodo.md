@@ -35,9 +35,10 @@
    - Erwartetes Endpoint-Pattern mit Attributbeispielen dokumentieren
    - Contract fuer `Response` und `AuthService` klar beschreiben
    - Status: umgesetzt in `README.md` mit Endpoint-Muster und klaren Contract-Abschnitten
-9. Konfigurationsvalidierung vertiefen:
+9. [x] Konfigurationsvalidierung vertieft:
    - Schreib-/Leserechte fuer `cachePath` explizit pruefen
    - Fehlende oder inkonsistente Konfigurationswerte frueher abfangen
+   - Status: umgesetzt ueber fruehe Typvalidierung und Path-Checks in `RestService`
 10. CI-Checks aufsetzen:
     - Syntax/Lint, statische Analyse (z. B. PHPStan), Unit-Tests
     - Commit-/PR-Gates fuer regressionssichere Aenderungen

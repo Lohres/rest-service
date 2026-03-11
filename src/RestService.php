@@ -97,6 +97,21 @@ class RestService
                 'Directory "%s" does not exist', $this->config[self::FILE_PATH]
             ));
         }
+        if (!is_readable(filename: $this->config[self::FILE_PATH])) {
+            throw new RuntimeException(message: sprintf(
+                'Directory "%s" is not readable', $this->config[self::FILE_PATH]
+            ));
+        }
+        if (!is_readable(filename: $this->config[self::CACHE_PATH])) {
+            throw new RuntimeException(message: sprintf(
+                'Directory "%s" is not readable', $this->config[self::CACHE_PATH]
+            ));
+        }
+        if (!is_writable(filename: $this->config[self::CACHE_PATH])) {
+            throw new RuntimeException(message: sprintf(
+                'Directory "%s" is not writable', $this->config[self::CACHE_PATH]
+            ));
+        }
         $cacheFile = $this->getCacheFilePath();
         if (!$this->isCacheEnabled()) {
             $this->map = $this->generateMap(persistCache: false);
@@ -154,6 +169,67 @@ class RestService
         ) {
             throw new RuntimeException(
                 message: "config for rest-service invalid!",
+                code: HttpCodes::InternalServerError->value
+            );
+        }
+
+        $requiredStringKeys = [self::CACHE_PATH, self::FILE_PATH, self::NAMESPACE];
+        foreach ($requiredStringKeys as $key) {
+            if (!is_string(value: $this->config[$key]) || trim(string: $this->config[$key]) === "") {
+                throw new RuntimeException(
+                    message: "config value must be non-empty string: $key",
+                    code: HttpCodes::InternalServerError->value
+                );
+            }
+        }
+
+        if (array_key_exists(self::REPLACE, $this->config) && !is_string(value: $this->config[self::REPLACE])) {
+            throw new RuntimeException(
+                message: "config value must be string: " . self::REPLACE,
+                code: HttpCodes::InternalServerError->value
+            );
+        }
+
+        if (array_key_exists(self::CACHE_ENABLED, $this->config) && !is_bool(value: $this->config[self::CACHE_ENABLED])) {
+            throw new RuntimeException(
+                message: "config value must be bool: " . self::CACHE_ENABLED,
+                code: HttpCodes::InternalServerError->value
+            );
+        }
+        if (array_key_exists(self::CACHE_FORCE_REBUILD, $this->config) && !is_bool(value: $this->config[self::CACHE_FORCE_REBUILD])) {
+            throw new RuntimeException(
+                message: "config value must be bool: " . self::CACHE_FORCE_REBUILD,
+                code: HttpCodes::InternalServerError->value
+            );
+        }
+
+        if (array_key_exists(self::CORS_ALLOWED_ORIGINS, $this->config) && !is_array(value: $this->config[self::CORS_ALLOWED_ORIGINS])) {
+            throw new RuntimeException(
+                message: "config value must be array: " . self::CORS_ALLOWED_ORIGINS,
+                code: HttpCodes::InternalServerError->value
+            );
+        }
+        if (array_key_exists(self::CORS_ALLOW_METHODS, $this->config) && !is_array(value: $this->config[self::CORS_ALLOW_METHODS])) {
+            throw new RuntimeException(
+                message: "config value must be array: " . self::CORS_ALLOW_METHODS,
+                code: HttpCodes::InternalServerError->value
+            );
+        }
+        if (array_key_exists(self::CORS_ALLOW_HEADERS, $this->config) && !is_array(value: $this->config[self::CORS_ALLOW_HEADERS])) {
+            throw new RuntimeException(
+                message: "config value must be array: " . self::CORS_ALLOW_HEADERS,
+                code: HttpCodes::InternalServerError->value
+            );
+        }
+        if (array_key_exists(self::CORS_ALLOW_CREDENTIALS, $this->config) && !is_bool(value: $this->config[self::CORS_ALLOW_CREDENTIALS])) {
+            throw new RuntimeException(
+                message: "config value must be bool: " . self::CORS_ALLOW_CREDENTIALS,
+                code: HttpCodes::InternalServerError->value
+            );
+        }
+        if (array_key_exists(self::CORS_MAX_AGE, $this->config) && !is_int(value: $this->config[self::CORS_MAX_AGE])) {
+            throw new RuntimeException(
+                message: "config value must be int: " . self::CORS_MAX_AGE,
                 code: HttpCodes::InternalServerError->value
             );
         }
