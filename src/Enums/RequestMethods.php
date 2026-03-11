@@ -2,6 +2,9 @@
 
 namespace Lohres\RestService\Enums;
 
+/**
+ * Supported HTTP request methods.
+ */
 enum RequestMethods: string {
     case GET = "GET";
     case HEAD = "HEAD";

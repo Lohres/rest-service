@@ -8,6 +8,11 @@
       "Lohres\\RestService\\": "src/"
     }
   },
+  "autoload-dev": {
+    "psr-4": {
+      "Tests\\": "tests/"
+    }
+  },
   "authors": [
     {
       "name": "Christian Lührs",
@@ -15,7 +20,11 @@
     }
   ],
   "require-dev": {
+    "phpunit/phpunit": "^11.5",
     "roave/security-advisories": "dev-latest"
+  },
+  "scripts": {
+    "test": "phpunit"
   },
   "require": {
     "php": "^8.4",
