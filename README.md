@@ -39,7 +39,7 @@ REST Service for lohres projects
 
 ## Endpoint Pattern
 
-Endpoints werden ueber PHP-Attribute auf `public static` Methoden abgebildet.
+Endpoints are mapped via PHP attributes on `public static` methods.
 
 ```php
 <?php declare(strict_types=1);
@@ -68,24 +68,24 @@ final class User
 }
 ```
 
-Die Route wird dabei als `<klassenname-klein>/<url-attribute>` gebildet.
-Im Beispiel ist das `user/profile`.
+The route is built as `<lowercase-classname>/<url-attribute>`.
+In this example it is `user/profile`.
 
 ## Contracts
 
 ### Response
 
-Jede Endpoint-Methode muss ein `Response` Objekt zurueckgeben.
+Each endpoint method must return a `Response` object.
 
-- Standardfelder:
+- Standard fields:
   - `success` (`bool`)
   - `content` (`mixed`)
   - optional `debug` (`string`)
-- Fehlerantworten folgen ebenfalls der `Response`-Struktur mit `content.message` und `content.code`.
+- Error responses also follow the `Response` structure with `content.message` and `content.code`.
 
 ### AuthService
 
-Fuer geschuetzte Endpoints (`#[Auth(true)]`) kann ein eigener Auth-Service injiziert werden:
+For protected endpoints (`#[Auth(true)]`), a custom auth service can be injected:
 
 ```php
 <?php declare(strict_types=1);
@@ -106,13 +106,13 @@ final class JwtAuthService extends AuthService
 }
 ```
 
-`checkToken(string $token): void` muss bei ungueltigen Tokens eine Exception werfen.
+`checkToken(string $token): void` must throw an exception for invalid tokens.
 
-## Konfigurationsvalidierung
+## Configuration Validation
 
-`RestService` validiert Konfigurationswerte beim Start fruehzeitig:
+`RestService` validates configuration values early during startup:
 
-- Pflichtfelder als nicht-leere Strings: `cachePath`, `filePath`, `namespace`
-- Typpruefung optionaler Werte (z. B. `cacheEnabled` als `bool`, `corsMaxAge` als `int`)
-- `cachePath` muss lesbar und schreibbar sein
-- `filePath` muss existieren und lesbar sein
+- Required fields as non-empty strings: `cachePath`, `filePath`, `namespace`
+- Type checks for optional values (e.g. `cacheEnabled` as `bool`, `corsMaxAge` as `int`)
+- `cachePath` must be readable and writable
+- `filePath` must exist and be readable
