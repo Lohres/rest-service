@@ -39,6 +39,5 @@
    - Schreib-/Leserechte fuer `cachePath` explizit pruefen
    - Fehlende oder inkonsistente Konfigurationswerte frueher abfangen
    - Status: umgesetzt ueber fruehe Typvalidierung und Path-Checks in `RestService`
-10. CI-Checks aufsetzen:
-    - Syntax/Lint, statische Analyse (z. B. PHPStan), Unit-Tests
-    - Commit-/PR-Gates fuer regressionssichere Aenderungen
+10. [x] CI-Checks aufgesetzt:
+    - Status: umgesetzt ueber GitHub Actions Workflow in `.github/workflows/php.yml` (Composer Validate + Test Suite)
