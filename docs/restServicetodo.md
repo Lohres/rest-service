@@ -19,9 +19,10 @@
    - Statischen Aufruf (`$class::$method()`) validieren
    - Klarere Fehlermeldung, wenn Methode nicht statisch/inkompatibel ist
    - Status: umgesetzt mit Target-Validierung (`public static`) und Rueckgabetyppruefung auf `Response`
-5. Input-Parsing erweitern:
+5. [x] Input-Parsing erweitert:
    - Weitere Content-Types unterstuetzen
    - Defensive Behandlung leerer/ungueltiger JSON-Payloads
+   - Status: umgesetzt fuer `application/json` und `application/*+json` mit sicherem Fallback auf leeres Array
 6. Fehlerbehandlung konsolidieren:
    - `die()`/`exit()` minimieren und zentrale Response-Strategie verwenden
    - Einheitliche Fehlerstruktur fuer alle Ausnahmefaelle

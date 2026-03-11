@@ -172,19 +172,17 @@ class RestService
 
     /**
      * @return void
-     * @throws JsonException
      */
     private function parseInput(): void
     {
         $this->logger?->debug(message: "parse input");
-        $_POST = match ($_SERVER["CONTENT_TYPE"] ?? "") {
-            "application/json;charset=utf-8", "application/json" => json_decode(
-                json: file_get_contents("php://input"),
-                associative: true,
-                flags: JSON_THROW_ON_ERROR
-            ),
-            default => $_POST
-        };
+        $contentType = $this->normalizeContentType(contentType: $_SERVER["CONTENT_TYPE"] ?? "");
+        if (!$this->isJsonContentType(contentType: $contentType)) {
+            return;
+        }
+
+        $rawInput = file_get_contents(filename: "php://input");
+        $_POST = $this->decodeJsonBody(rawInput: is_string($rawInput) ? $rawInput : "");
     }
 
     /**
@@ -558,6 +556,50 @@ class RestService
         }
 
         return $maxAge;
+    }
+
+    /**
+     * @param string $contentType
+     * @return string
+     */
+    private function normalizeContentType(string $contentType): string
+    {
+        return strtolower(string: trim(string: explode(separator: ";", string: $contentType)[0] ?? ""));
+    }
+
+    /**
+     * @param string $contentType
+     * @return bool
+     */
+    private function isJsonContentType(string $contentType): bool
+    {
+        return $contentType === "application/json" || str_ends_with(haystack: $contentType, needle: "+json");
+    }
+
+    /**
+     * @param string $rawInput
+     * @return array
+     */
+    private function decodeJsonBody(string $rawInput): array
+    {
+        $trimmed = trim(string: $rawInput);
+        if ($trimmed === "") {
+            return [];
+        }
+
+        try {
+            $decoded = json_decode(json: $trimmed, associative: true, flags: JSON_THROW_ON_ERROR);
+        } catch (JsonException $exception) {
+            $this->logger?->warning(message: "invalid json payload", context: ["error" => $exception->getMessage()]);
+            return [];
+        }
+
+        if (!is_array(value: $decoded)) {
+            $this->logger?->warning(message: "json payload must decode to object or array");
+            return [];
+        }
+
+        return $decoded;
     }
 
     /**
