@@ -11,7 +11,12 @@ REST Service for lohres projects
 >     RestService::CACHE_PATH => "PATH/TO/YOUR/CACHE/DIRECTORY",
 >     RestService::FILE_PATH => "PATH/TO/YOUR/ENDPOINTS/DIRECTORY",
 >     RestService::NAMESPACE => "\\YOUR\\ENDPOINTS\\NAMESPACE\\",
->     RestService::REPLACE => "your-replace-string" // /your-replace-string/myEndpoint/function  -> myEndpoint/function
+>     RestService::REPLACE => "your-replace-string", // /your-replace-string/myEndpoint/function  -> myEndpoint/function
+>     RestService::CORS_ALLOWED_ORIGINS => ["https://example.com", "https://app.example.com"],
+>     RestService::CORS_ALLOW_METHODS => ["GET", "POST", "OPTIONS"],
+>     RestService::CORS_ALLOW_HEADERS => ["Authorization", "Content-Type"],
+>     RestService::CORS_ALLOW_CREDENTIALS => true,
+>     RestService::CORS_MAX_AGE => 86400
 > ];
 > 
 > $logger = null // monolog Logger;

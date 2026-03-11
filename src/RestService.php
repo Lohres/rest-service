@@ -29,6 +29,11 @@ class RestService
     public const string FILE_PATH = "filePath";
     public const string NAMESPACE = "namespace";
     public const string REPLACE = "replace";
+    public const string CORS_ALLOWED_ORIGINS = "corsAllowedOrigins";
+    public const string CORS_ALLOW_METHODS = "corsAllowMethods";
+    public const string CORS_ALLOW_HEADERS = "corsAllowHeaders";
+    public const string CORS_ALLOW_CREDENTIALS = "corsAllowCredentials";
+    public const string CORS_MAX_AGE = "corsMaxAge";
     private array $config {
         get {
             return $this->config;
@@ -399,15 +404,96 @@ class RestService
     private function cors(): void
     {
         $this->logger?->debug(message: "set cors");
-        if (in_array(needle: $_SERVER["HTTP_ORIGIN"] ?? "", haystack: LOHRES_ALLOWED_ORIGINS, strict: true)) {
-            header(header: "Access-Control-Allow-Origin: " . $_SERVER["HTTP_ORIGIN"]);
+        $requestOrigin = $_SERVER["HTTP_ORIGIN"] ?? "";
+        $allowedOrigins = $this->getCorsAllowedOrigins();
+        if ($requestOrigin !== "" && in_array(needle: $requestOrigin, haystack: $allowedOrigins, strict: true)) {
+            header(header: "Access-Control-Allow-Origin: " . $requestOrigin);
         }
-        if (LOHRES_ALLOWED_ORIGINS[0] === "*") {
+        if (in_array(needle: "*", haystack: $allowedOrigins, strict: true)) {
             header(header: "Access-Control-Allow-Origin: *");
         }
-        header(header: "Access-Control-Allow-Credentials: true");
-        header(header: "Access-Control-Max-Age: 86400");    // cache for 1 day
-        header(header: "Access-Control-Allow-Methods: POST, OPTIONS");
-        header(header: "Access-Control-Allow-Headers: *, Authorization");
+        header(header: "Access-Control-Allow-Credentials: " . ($this->isCorsCredentialsAllowed() ? "true" : "false"));
+        header(header: "Access-Control-Max-Age: " . $this->getCorsMaxAge());
+        header(header: "Access-Control-Allow-Methods: " . implode(separator: ", ", array: $this->getCorsAllowMethods()));
+        header(header: "Access-Control-Allow-Headers: " . implode(separator: ", ", array: $this->getCorsAllowHeaders()));
+    }
+
+    /**
+     * @return string[]
+     */
+    private function getCorsAllowedOrigins(): array
+    {
+        $configuredOrigins = $this->config[self::CORS_ALLOWED_ORIGINS] ?? null;
+        if (is_array($configuredOrigins) && !empty($configuredOrigins)) {
+            return array_values(array: array_filter(
+                array_map(callback: static fn($origin) => is_string($origin) ? trim(string: $origin) : "", array: $configuredOrigins),
+                static fn(string $origin) => $origin !== ""
+            ));
+        }
+
+        if (defined(constant_name: "LOHRES_ALLOWED_ORIGINS") && is_array(LOHRES_ALLOWED_ORIGINS) && !empty(LOHRES_ALLOWED_ORIGINS)) {
+            return LOHRES_ALLOWED_ORIGINS;
+        }
+
+        return ["*"];
+    }
+
+    /**
+     * @return string[]
+     */
+    private function getCorsAllowMethods(): array
+    {
+        $configuredMethods = $this->config[self::CORS_ALLOW_METHODS] ?? null;
+        if (is_array($configuredMethods) && !empty($configuredMethods)) {
+            return array_values(array: array_filter(
+                array_map(
+                    callback: static fn($method) => is_string($method) ? strtoupper(string: trim(string: $method)) : "",
+                    array: $configuredMethods
+                ),
+                static fn(string $method) => $method !== ""
+            ));
+        }
+
+        return [RequestMethods::POST->value, RequestMethods::OPTIONS->value];
+    }
+
+    /**
+     * @return string[]
+     */
+    private function getCorsAllowHeaders(): array
+    {
+        $configuredHeaders = $this->config[self::CORS_ALLOW_HEADERS] ?? null;
+        if (is_array($configuredHeaders) && !empty($configuredHeaders)) {
+            return array_values(array: array_filter(
+                array_map(
+                    callback: static fn($header) => is_string($header) ? trim(string: $header) : "",
+                    array: $configuredHeaders
+                ),
+                static fn(string $header) => $header !== ""
+            ));
+        }
+
+        return ["*", "Authorization"];
+    }
+
+    /**
+     * @return bool
+     */
+    private function isCorsCredentialsAllowed(): bool
+    {
+        return (bool)($this->config[self::CORS_ALLOW_CREDENTIALS] ?? true);
+    }
+
+    /**
+     * @return int
+     */
+    private function getCorsMaxAge(): int
+    {
+        $maxAge = $this->config[self::CORS_MAX_AGE] ?? 86400;
+        if (!is_int($maxAge) || $maxAge < 0) {
+            return 86400;
+        }
+
+        return $maxAge;
     }
 }

@@ -7,9 +7,10 @@
    - Auth-Pfade (`#[Auth(true)]`, fehlender/ungueltiger Bearer-Token)
    - Fehlerantworten und HTTP-Statuscodes
    - Status: umgesetzt via `phpunit.xml`, `tests/` Fixtures und 6 Passing Tests
-2. CORS-Konfiguration flexibler machen:
+2. [x] CORS-Konfiguration flexibler gemacht:
    - Erlaubte Methoden und Header nicht hart kodieren
    - Werte aus Konfiguration statt globaler Konstante beziehen
+   - Status: umgesetzt ueber neue Config-Keys in `RestService` mit Rueckfall auf Defaults/Legacy-Konstante
 3. Cache-Strategie verbessern:
    - Invalidation bei Endpoint-Aenderungen
    - Option fuer erzwungenen Rebuild und Cache-Disable in Dev
