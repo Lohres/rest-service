@@ -135,7 +135,7 @@ class RestService
             $this->checkAuthNeeded();
             $this->callEndpoint();
         } catch (Throwable $exception) {
-            $this->logger?->error(message: $exception->getMessage(), context: [$exception->getTrace()]);
+            $this->logException(event: "rest-service request failed", exception: $exception);
             $this->handleException(exception: $exception);
         }
     }
@@ -192,7 +192,7 @@ class RestService
     private function handleException(Throwable $exception): void
     {
         $normalized = $this->normalizeException(exception: $exception);
-        $this->logger?->debug(message: "handle exception", context: [$normalized->getTrace()]);
+        $this->logException(event: "prepare error response", exception: $normalized, level: "debug");
         header(header: "HTTP/1.0 {$normalized->getCode()} {$normalized->getMessage()}");
         $content = [
             "message" => $normalized->getMessage(),
@@ -204,7 +204,7 @@ class RestService
         try {
             $this->prepareResponse(response: $response);
         } catch (Throwable $exception) {
-            $this->logger?->error(message: "failed to prepare error response", context: [$exception->getMessage()]);
+            $this->logException(event: "failed to prepare error response", exception: $exception);
             header(header: "Content-type:application/json;charset=utf-8");
             echo '{"success":false,"content":{"message":"Internal Server Error","code":"500"}}';
         }
@@ -216,7 +216,7 @@ class RestService
      */
     private function parseTarget(string $target): array|bool
     {
-        $this->logger?->debug(message: "parse target $target");
+        $this->logger?->debug(message: "parse target");
         if (!str_contains(haystack: $target, needle: "@")) {
             return false;
         }
@@ -230,7 +230,7 @@ class RestService
      */
     private function parseUrl(string $method, string $url): array
     {
-        $this->logger?->debug(message: "parse url $url");
+        $this->logger?->debug(message: "parse url");
         $path = preg_replace(pattern: '/\?.*$/', replacement: "", subject: $url);
         if (!empty($this->config[self::REPLACE])) {
             $path = str_replace(search: $this->config[self::REPLACE], replace: "", subject: $path);
@@ -253,7 +253,10 @@ class RestService
      */
     private function getToken(string $token): string
     {
-        $this->logger?->debug(message: "get token from $token");
+        $this->logger?->debug(
+            message: "extract bearer token",
+            context: ["token_preview" => $this->maskSensitiveValue(value: $token)]
+        );
         if (!str_contains(haystack: $token, needle: "Bearer")) {
             throw new RuntimeException(
                 message: HttpCodes::toString(HttpCodes::Forbidden->value),
@@ -569,12 +572,18 @@ class RestService
         try {
             $decoded = json_decode(json: $trimmed, associative: true, flags: JSON_THROW_ON_ERROR);
         } catch (JsonException $exception) {
-            $this->logger?->warning(message: "invalid json payload", context: ["error" => $exception->getMessage()]);
+            $this->logger?->warning(
+                message: "invalid json payload",
+                context: ["source" => "decodeJsonBody", "error" => $exception->getMessage()]
+            );
             return [];
         }
 
         if (!is_array(value: $decoded)) {
-            $this->logger?->warning(message: "json payload must decode to object or array");
+            $this->logger?->warning(
+                message: "json payload must decode to object or array",
+                context: ["source" => "decodeJsonBody"]
+            );
             return [];
         }
 
@@ -679,5 +688,53 @@ class RestService
         }
 
         return new RuntimeException(message: $message, code: $code, previous: $exception);
+    }
+
+    /**
+     * @param string $event
+     * @param Throwable $exception
+     * @param string $level
+     * @return void
+     */
+    private function logException(string $event, Throwable $exception, string $level = "error"): void
+    {
+        if ($this->logger === null) {
+            return;
+        }
+
+        $context = [
+            "event" => $event,
+            "exception_class" => $exception::class,
+            "code" => (int)$exception->getCode(),
+            "message" => $exception->getMessage(),
+        ];
+
+        match ($level) {
+            "debug" => $this->logger->debug(message: $event, context: $context),
+            "warning" => $this->logger->warning(message: $event, context: $context),
+            default => $this->logger->error(message: $event, context: $context),
+        };
+    }
+
+    /**
+     * @param string $value
+     * @return string
+     */
+    private function maskSensitiveValue(string $value): string
+    {
+        $trimmed = trim(string: $value);
+        if ($trimmed === "") {
+            return "<empty>";
+        }
+
+        $length = strlen(string: $trimmed);
+        if ($length <= 8) {
+            return str_repeat(string: "*", times: $length);
+        }
+
+        $prefix = substr(string: $trimmed, offset: 0, length: 4);
+        $suffix = substr(string: $trimmed, offset: -4);
+
+        return $prefix . str_repeat(string: "*", times: $length - 8) . $suffix;
     }
 }

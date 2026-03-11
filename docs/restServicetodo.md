@@ -27,9 +27,10 @@
    - `die()`/`exit()` minimieren und zentrale Response-Strategie verwenden
    - Einheitliche Fehlerstruktur fuer alle Ausnahmefaelle
    - Status: umgesetzt ueber zentralen Exception-Flow in `init()` mit normalisierter JSON-Fehlerresponse
-7. Logging-Hygiene verbessern:
+7. [x] Logging-Hygiene verbessert:
    - Sensible Daten (z. B. Tokens) nie im Klartext loggen
    - Log-Level und Kontext klar standardisieren
+   - Status: umgesetzt ueber Maskierung sensibler Werte und einheitlichen Exception-Logkontext
 8. API-Dokumentation ergaenzen:
    - Erwartetes Endpoint-Pattern mit Attributbeispielen dokumentieren
    - Contract fuer `Response` und `AuthService` klar beschreiben
