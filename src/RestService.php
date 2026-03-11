@@ -26,6 +26,8 @@ use Throwable;
 class RestService
 {
     public const string CACHE_PATH = "cachePath";
+    public const string CACHE_ENABLED = "cacheEnabled";
+    public const string CACHE_FORCE_REBUILD = "cacheForceRebuild";
     public const string FILE_PATH = "filePath";
     public const string NAMESPACE = "namespace";
     public const string REPLACE = "replace";
@@ -96,15 +98,18 @@ class RestService
             ));
         }
         try {
-            $cacheFile =  $this->config[self::CACHE_PATH] . DIRECTORY_SEPARATOR . "rest-service-map.cache";
-            if (file_exists(filename: $cacheFile)) {
-                $this->map = json_decode(
-                    json: file_get_contents(filename: $cacheFile),
-                    associative: true,
-                    flags: JSON_THROW_ON_ERROR
-                );
+            $cacheFile = $this->getCacheFilePath();
+            if (!$this->isCacheEnabled()) {
+                $this->map = $this->generateMap(persistCache: false);
+            } elseif ($this->isCacheForceRebuild()) {
+                $this->map = $this->generateMap(persistCache: true);
             } else {
-                $this->map = $this->generateMap();
+                $cachedMap = $this->readMapFromCache(cacheFile: $cacheFile);
+                if ($cachedMap !== null) {
+                    $this->map = $cachedMap;
+                } else {
+                    $this->map = $this->generateMap(persistCache: true);
+                }
             }
             $this->logger?->debug(message: "RestService initialized");
         } catch (Throwable $exception) {
@@ -346,7 +351,7 @@ class RestService
      * @return array
      * @throws JsonException
      */
-    private function generateMap(): array
+    private function generateMap(bool $persistCache = true): array
     {
         $this->logger?->debug(message: "generate map");
         $mapList = [];
@@ -388,10 +393,13 @@ class RestService
                 }
             }
         }
-        if (!empty($mapList)) {
+        if (!empty($mapList) && $persistCache && $this->isCacheEnabled()) {
             file_put_contents(
-                filename: $this->config[self::CACHE_PATH] . DIRECTORY_SEPARATOR . "rest-service-map.cache",
-                data: json_encode(value: $mapList, flags: JSON_THROW_ON_ERROR)
+                filename: $this->getCacheFilePath(),
+                data: json_encode(value: [
+                    "signature" => $this->buildEndpointSignature(),
+                    "map" => $mapList
+                ], flags: JSON_THROW_ON_ERROR)
             );
             $this->logger?->debug(message: "map saved in cache");
         }
@@ -495,5 +503,86 @@ class RestService
         }
 
         return $maxAge;
+    }
+
+    /**
+     * @return bool
+     */
+    private function isCacheEnabled(): bool
+    {
+        return (bool)($this->config[self::CACHE_ENABLED] ?? true);
+    }
+
+    /**
+     * @return bool
+     */
+    private function isCacheForceRebuild(): bool
+    {
+        return (bool)($this->config[self::CACHE_FORCE_REBUILD] ?? false);
+    }
+
+    /**
+     * @return string
+     */
+    private function getCacheFilePath(): string
+    {
+        return $this->config[self::CACHE_PATH] . DIRECTORY_SEPARATOR . "rest-service-map.cache";
+    }
+
+    /**
+     * @param string $cacheFile
+     * @return array|null
+     * @throws JsonException
+     */
+    private function readMapFromCache(string $cacheFile): ?array
+    {
+        if (!file_exists(filename: $cacheFile)) {
+            return null;
+        }
+
+        $decoded = json_decode(
+            json: file_get_contents(filename: $cacheFile),
+            associative: true,
+            flags: JSON_THROW_ON_ERROR
+        );
+        if (!is_array(value: $decoded) || !isset($decoded["map"], $decoded["signature"])) {
+            return null;
+        }
+        if (!is_array(value: $decoded["map"]) || !is_string(value: $decoded["signature"])) {
+            return null;
+        }
+        if ($decoded["signature"] !== $this->buildEndpointSignature()) {
+            $this->logger?->debug(message: "cache signature mismatch, rebuilding map");
+            return null;
+        }
+
+        return $decoded["map"];
+    }
+
+    /**
+     * @return string
+     */
+    private function buildEndpointSignature(): string
+    {
+        $items = [];
+        $rdi = new RecursiveDirectoryIterator(
+            directory: $this->config[self::FILE_PATH],
+            flags: FilesystemIterator::SKIP_DOTS | FilesystemIterator::UNIX_PATHS
+        );
+        $iterator = new RecursiveIteratorIterator(iterator: $rdi);
+        foreach ($iterator as $file) {
+            assert(assertion: $file instanceof SplFileInfo);
+            if ($file->isFile() && $file->getExtension() === "php") {
+                $items[] = sprintf(
+                    "%s|%d|%d",
+                    $file->getPathname(),
+                    $file->getMTime(),
+                    $file->getSize()
+                );
+            }
+        }
+        sort(array: $items);
+
+        return sha1(string: implode(separator: "\n", array: $items));
     }
 }

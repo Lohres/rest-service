@@ -11,9 +11,10 @@
    - Erlaubte Methoden und Header nicht hart kodieren
    - Werte aus Konfiguration statt globaler Konstante beziehen
    - Status: umgesetzt ueber neue Config-Keys in `RestService` mit Rueckfall auf Defaults/Legacy-Konstante
-3. Cache-Strategie verbessern:
+3. [x] Cache-Strategie verbessert:
    - Invalidation bei Endpoint-Aenderungen
    - Option fuer erzwungenen Rebuild und Cache-Disable in Dev
+   - Status: umgesetzt ueber signaturbasierten Cache, `cacheForceRebuild` und `cacheEnabled`
 4. Endpoint-Aufruf robuster gestalten:
    - Statischen Aufruf (`$class::$method()`) validieren
    - Klarere Fehlermeldung, wenn Methode nicht statisch/inkompatibel ist

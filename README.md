@@ -9,6 +9,8 @@ REST Service for lohres projects
 > 
 > $config = [
 >     RestService::CACHE_PATH => "PATH/TO/YOUR/CACHE/DIRECTORY",
+>     RestService::CACHE_ENABLED => true,
+>     RestService::CACHE_FORCE_REBUILD => false,
 >     RestService::FILE_PATH => "PATH/TO/YOUR/ENDPOINTS/DIRECTORY",
 >     RestService::NAMESPACE => "\\YOUR\\ENDPOINTS\\NAMESPACE\\",
 >     RestService::REPLACE => "your-replace-string", // /your-replace-string/myEndpoint/function  -> myEndpoint/function
