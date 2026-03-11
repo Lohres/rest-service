@@ -15,9 +15,10 @@
    - Invalidation bei Endpoint-Aenderungen
    - Option fuer erzwungenen Rebuild und Cache-Disable in Dev
    - Status: umgesetzt ueber signaturbasierten Cache, `cacheForceRebuild` und `cacheEnabled`
-4. Endpoint-Aufruf robuster gestalten:
+4. [x] Endpoint-Aufruf robuster gestaltet:
    - Statischen Aufruf (`$class::$method()`) validieren
    - Klarere Fehlermeldung, wenn Methode nicht statisch/inkompatibel ist
+   - Status: umgesetzt mit Target-Validierung (`public static`) und Rueckgabetyppruefung auf `Response`
 5. Input-Parsing erweitern:
    - Weitere Content-Types unterstuetzen
    - Defensive Behandlung leerer/ungueltiger JSON-Payloads

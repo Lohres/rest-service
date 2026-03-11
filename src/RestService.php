@@ -335,16 +335,71 @@ class RestService
     {
         try {
             $this->logger?->debug(message: "call endpoint");
-            $targetArr = $this->parseUrl(method: $_SERVER["REQUEST_METHOD"], url: $_SERVER["REQUEST_URI"]);
-            $class = $this->config[self::NAMESPACE] . $targetArr[1];
-            $method = $targetArr[0];
-            $response = $class::$method();
+            [$class, $method] = $this->resolveEndpointTarget(
+                httpMethod: $_SERVER["REQUEST_METHOD"],
+                requestUri: $_SERVER["REQUEST_URI"]
+            );
+            $response = $this->invokeEndpointMethod(class: $class, method: $method);
             $this->prepareResponse(response: $response);
             exit(0);
         } catch (Throwable $exception) {
             $this->logger?->error(message: $exception->getMessage(), context: [$exception->getTrace()]);
             $this->handleException(exception: $exception);
         }
+    }
+
+    /**
+     * @param string $httpMethod
+     * @param string $requestUri
+     * @return array{0:string,1:string}
+     */
+    private function resolveEndpointTarget(string $httpMethod, string $requestUri): array
+    {
+        $targetArr = $this->parseUrl(method: $httpMethod, url: $requestUri);
+        $class = $this->config[self::NAMESPACE] . $targetArr[1];
+        $method = $targetArr[0];
+        if (!class_exists(class: $class)) {
+            throw new RuntimeException(
+                message: "endpoint class not found: $class",
+                code: HttpCodes::NotFound->value
+            );
+        }
+
+        $reflection = new ReflectionClass(objectOrClass: $class);
+        if (!$reflection->hasMethod(name: $method)) {
+            throw new RuntimeException(
+                message: "endpoint method not found: $class::$method",
+                code: HttpCodes::NotFound->value
+            );
+        }
+
+        $reflectionMethod = $reflection->getMethod(name: $method);
+        if (!$reflectionMethod->isPublic() || !$reflectionMethod->isStatic()) {
+            throw new RuntimeException(
+                message: "endpoint method must be public static: $class::$method",
+                code: HttpCodes::InternalServerError->value
+            );
+        }
+
+        return [$class, $method];
+    }
+
+    /**
+     * @param string $class
+     * @param string $method
+     * @return Response
+     */
+    private function invokeEndpointMethod(string $class, string $method): Response
+    {
+        $response = $class::$method();
+        if (!$response instanceof Response) {
+            throw new RuntimeException(
+                message: "endpoint method must return Response: $class::$method",
+                code: HttpCodes::InternalServerError->value
+            );
+        }
+
+        return $response;
     }
 
     /**
