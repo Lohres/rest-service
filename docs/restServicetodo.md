@@ -23,9 +23,10 @@
    - Weitere Content-Types unterstuetzen
    - Defensive Behandlung leerer/ungueltiger JSON-Payloads
    - Status: umgesetzt fuer `application/json` und `application/*+json` mit sicherem Fallback auf leeres Array
-6. Fehlerbehandlung konsolidieren:
+6. [x] Fehlerbehandlung konsolidiert:
    - `die()`/`exit()` minimieren und zentrale Response-Strategie verwenden
    - Einheitliche Fehlerstruktur fuer alle Ausnahmefaelle
+   - Status: umgesetzt ueber zentralen Exception-Flow in `init()` mit normalisierter JSON-Fehlerresponse
 7. Logging-Hygiene verbessern:
    - Sensible Daten (z. B. Tokens) nie im Klartext loggen
    - Log-Level und Kontext klar standardisieren
