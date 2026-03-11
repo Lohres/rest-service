@@ -16,9 +16,9 @@ Ohne Ticket-ID:
 - `docs(readme): ki - add local setup steps`
 
 Mit Ticket-ID:
-- `feat(auth): DS-43 ki - add token refresh endpoint`
-- `fix(api): HK-432 ki - handle empty pagination cursor`
-- `docs(readme): SCHMITT-678 ki - add local setup steps`
+- `feat(auth): TICKET-43 ki - add token refresh endpoint`
+- `fix(api): DEF-432 ki - handle empty pagination cursor`
+- `docs(readme): AB-678 ki - add local setup steps`
 
 ## Nicht erlaubt
 
