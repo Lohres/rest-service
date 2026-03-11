@@ -116,3 +116,28 @@ final class JwtAuthService extends AuthService
 - Type checks for optional values (e.g. `cacheEnabled` as `bool`, `corsMaxAge` as `int`)
 - `cachePath` must be readable and writable
 - `filePath` must exist and be readable
+
+## Example Call
+
+Run the local PHP server with the provided bootstrap:
+
+```bash
+php -S 127.0.0.1:8080 index.php
+```
+
+Call the sample endpoint (without auth):
+
+```bash
+curl http://127.0.0.1:8080/ping/hello
+```
+
+Expected response:
+
+```json
+{
+  "success": true,
+  "content": {
+    "message": "Hello from RestService example endpoint"
+  }
+}
+```
