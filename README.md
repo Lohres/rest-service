@@ -36,3 +36,74 @@ REST Service for lohres projects
 > }
 > ``` 
 >
+
+## Endpoint Pattern
+
+Endpoints werden ueber PHP-Attribute auf `public static` Methoden abgebildet.
+
+```php
+<?php declare(strict_types=1);
+
+namespace App\Endpoints;
+
+use Lohres\RestService\Attributes\Auth;
+use Lohres\RestService\Attributes\Method;
+use Lohres\RestService\Attributes\Url;
+use Lohres\RestService\Enums\RequestMethods;
+use Lohres\RestService\Response;
+
+final class User
+{
+    #[Method(RequestMethods::GET->value)]
+    #[Url('profile')]
+    #[Auth(true)]
+    public static function profile(): Response
+    {
+        $response = new Response();
+        $response->setSuccess(true);
+        $response->setContent(['id' => 1, 'name' => 'Ada']);
+
+        return $response;
+    }
+}
+```
+
+Die Route wird dabei als `<klassenname-klein>/<url-attribute>` gebildet.
+Im Beispiel ist das `user/profile`.
+
+## Contracts
+
+### Response
+
+Jede Endpoint-Methode muss ein `Response` Objekt zurueckgeben.
+
+- Standardfelder:
+  - `success` (`bool`)
+  - `content` (`mixed`)
+  - optional `debug` (`string`)
+- Fehlerantworten folgen ebenfalls der `Response`-Struktur mit `content.message` und `content.code`.
+
+### AuthService
+
+Fuer geschuetzte Endpoints (`#[Auth(true)]`) kann ein eigener Auth-Service injiziert werden:
+
+```php
+<?php declare(strict_types=1);
+
+namespace App\Security;
+
+use Lohres\RestService\AuthService;
+use RuntimeException;
+
+final class JwtAuthService extends AuthService
+{
+    public function checkToken(string $token): void
+    {
+        if ($token === '') {
+            throw new RuntimeException('Forbidden', 403);
+        }
+    }
+}
+```
+
+`checkToken(string $token): void` muss bei ungueltigen Tokens eine Exception werfen.

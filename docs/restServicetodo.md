@@ -31,9 +31,10 @@
    - Sensible Daten (z. B. Tokens) nie im Klartext loggen
    - Log-Level und Kontext klar standardisieren
    - Status: umgesetzt ueber Maskierung sensibler Werte und einheitlichen Exception-Logkontext
-8. API-Dokumentation ergaenzen:
+8. [x] API-Dokumentation ergaenzt:
    - Erwartetes Endpoint-Pattern mit Attributbeispielen dokumentieren
    - Contract fuer `Response` und `AuthService` klar beschreiben
+   - Status: umgesetzt in `README.md` mit Endpoint-Muster und klaren Contract-Abschnitten
 9. Konfigurationsvalidierung vertiefen:
    - Schreib-/Leserechte fuer `cachePath` explizit pruefen
    - Fehlende oder inkonsistente Konfigurationswerte frueher abfangen
