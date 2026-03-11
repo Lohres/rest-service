@@ -1,0 +1,20 @@
+{
+  "version": 1,
+  "skills": {
+    "api-contract-testing": {
+      "source": "aj-geddes/useful-ai-prompts",
+      "sourceType": "github",
+      "computedHash": "15e2e8b75c60e6c1d5262fe20e13819ea5cb0d1875671daddf02b32ff6bf2d0d"
+    },
+    "php-testing": {
+      "source": "pluginagentmarketplace/custom-plugin-php",
+      "sourceType": "github",
+      "computedHash": "5f5f2025d8556d0e715a0a26f54c7f27e0130c4948ed41b9c30a5889fe077102"
+    },
+    "security-review": {
+      "source": "davila7/claude-code-templates",
+      "sourceType": "github",
+      "computedHash": "ab242f39ba30fa0af25104615e5897491408b09e4bfa75bed48553124f41bd21"
+    }
+  }
+}
